@@ -47,7 +47,7 @@ class GessGame:
         piece_start = Piece(start, self._board.get_game_board())
         piece_end = Piece(end, self._board.get_game_board())
 
-        # is the piece moving south?
+        # is the piece moving southward?
         if end[0] > start[0]:
 
             # is the piece moving southeast?
@@ -55,16 +55,65 @@ class GessGame:
 
                 # is the move truly diagonal?
                 if abs(end[0] - start[0]) == abs(end[1] - start[1]):
-                    return 'se'
 
-            # is the piece moving southwest?
-            if end[1] < start[1]:
-                return 'sw'
+                    # is there a stone in the SE position of the piece?
+                    if piece_start.get_piece_SE() == self._whose_turn:
+                        self._direction = [1, 1]  # set the direction of the move
+                        return True
 
-            # the piece must be moving directly south
-            print( 's')
+            # repeat of the above for a southwest move
+            elif end[1] < start[1]:
+                if abs(end[0] - start[0]) == abs(end[1] - start[1]):
+                    if piece_start.get_piece_SW() == self._whose_turn:
+                        self._direction = [1, -1]  # set the direction of the move
+                        return True
 
-        # when finished writing the method, replace this comment with "return False"
+            # must be direct south movement
+            else:
+                if piece_start.get_piece_S() == self._whose_turn:
+                    self._direction = [1, 0]  # set the direction of the move
+                    return True
+
+        # is the piece moving northward?
+        elif end[0] < start[0]:
+
+            # is the piece moving northeast?
+            if end[1] > start[1]:
+
+                # is the move truly diagonal?
+                if abs(end[0] - start[0]) == abs(end[1] - start[1]):
+
+                    # is there a stone in the NE position of the piece?
+                    if piece_start.get_piece_NE() == self._whose_turn:
+                        self._direction = [-1, 1]  # set the direction of the move
+                        return True
+
+            # repeat of the above for a northwest move
+            elif end[1] < start[1]:
+                if abs(end[0] - start[0]) == abs(end[1] - start[1]):
+                    if piece_start.get_piece_NW() == self._whose_turn:
+                        self._direction = [-1, -1]  # set the direction of the move
+                        return True
+
+            # must be direct north movement
+            else:
+                if piece_start.get_piece_N() == self._whose_turn:
+                    self._direction = [-1, 0]  # set the direction of the move
+                    return True
+
+        # direct east move?
+        elif end[0] == start[0] and end[1] > start[1]:
+            if piece_start.get_piece_E() == self._whose_turn:  # stone in the east position?
+                self._direction = [0, 1]  # set direction of the move
+                return True
+
+        # direct west move?
+        elif end[0] == start[0] and end[1] < start[1]:
+            if piece_start.get_piece_W() == self._whose_turn:  # stone in the west position?
+                self._direction = [0, -1]  # set direction of the move
+                return True
+
+        return False  # not a valid direction of movement
 
 class Board:
 
@@ -206,16 +255,10 @@ def display_board():
         print(row)
     print()
 
-
-def display_piece():
-    for row in footprint.get_piece_matrix():
-        print(row)
-
-
 test = GessGame()
 footprint = Piece([3,3], test.get_board().get_game_board())
-display_piece()
 test.get_board().add_piece(footprint, [13,11])
 display_board()
 
-print(test.make_move('d11', 'e10'))
+
+print(test.make_move('b6', 'd8'))
