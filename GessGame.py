@@ -32,16 +32,39 @@ class GessGame:
         if not check_piece.valid_piece(self._up_next):
             return False
 
+        return self.valid_direction(start, end)
+
+        return True
+
     def coordinate_conversion(self, position):
         """
         Converts a game-board position to a list with corresponding indices list[x][x]
-        Example: 'd16' to  [4,5], which is list[4][5]
+        Example: 'd16' to  [5,4], which is list[5][4]
         """
-        return [ord(position[0]) - 96, 21 - int(position[1:])]
+        return [21 - int(position[1:]), ord(position[0]) - 96]
 
     def valid_direction(self, start, end):
         piece_start = Piece(start, self._board.get_game_board())
         piece_end = Piece(end, self._board.get_game_board())
+
+        # is the piece moving south?
+        if end[0] > start[0]:
+
+            # is the piece moving southeast?
+            if end[1] > start[1]:
+
+                # is the move truly diagonal?
+                if abs(end[0] - start[0]) == abs(end[1] - start[1]):
+                    return 'se'
+
+            # is the piece moving southwest?
+            if end[1] < start[1]:
+                return 'sw'
+
+            # the piece must be moving directly south
+            print( 's')
+
+        # when finished writing the method, replace this comment with "return False"
 
 class Board:
 
@@ -145,12 +168,9 @@ class Piece:
         """
         if self._center == up_next:
             return False
-
         if up_next in self.perimeter():
-                print('False')
-                return False
+            return False
 
-        print('True')
         return True
 
     def get_piece_center(self):
@@ -198,4 +218,4 @@ display_piece()
 test.get_board().add_piece(footprint, [13,11])
 display_board()
 
-print(test.make_move('k6', 'i3'))
+print(test.make_move('d11', 'e10'))
