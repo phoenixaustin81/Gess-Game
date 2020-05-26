@@ -22,7 +22,7 @@ class GessGame:
             return False
 
         # if the move is not on the board
-        if start[0] > 19 or start [0] < 1 or start[1] > 20 or start[1] < 1:
+        if start[0] > 19 or start[0] < 1 or start[1] > 20 or start[1] < 1:
             return False
         if end[0] > 19 or end[0] < 1 or end[1] > 20 or end[1] < 1:
             return False
@@ -32,9 +32,11 @@ class GessGame:
         if not check_piece.valid_piece(self._up_next):
             return False
 
-        return self.valid_direction(start, end)
-
-        return True
+        # if the direction and distance are valid, attempt the move
+        if self.valid_direction(start, end) and self.valid_distance(start, end):
+            return self.board_step(start, end)
+        else:
+            return False
 
     def coordinate_conversion(self, position):
         """
@@ -44,8 +46,12 @@ class GessGame:
         return [21 - int(position[1:]), ord(position[0]) - 96]
 
     def valid_direction(self, start, end):
-        piece_start = Piece(start, self._board.get_game_board())
-        piece_end = Piece(end, self._board.get_game_board())
+        """
+        Checks whether the direction of a requested move is valid
+        If direction is valid, the direction attribute is set, and True is returned
+        If the direction is not valid, False is returned
+        """
+        moving_piece = Piece(start, self._board.get_game_board())
 
         # is the piece moving southward?
         if end[0] > start[0]:
@@ -57,20 +63,20 @@ class GessGame:
                 if abs(end[0] - start[0]) == abs(end[1] - start[1]):
 
                     # is there a stone in the SE position of the piece?
-                    if piece_start.get_piece_SE() == self._whose_turn:
+                    if moving_piece.get_piece_SE() == self._whose_turn:
                         self._direction = [1, 1]  # set the direction of the move
                         return True
 
             # repeat of the above for a southwest move
             elif end[1] < start[1]:
                 if abs(end[0] - start[0]) == abs(end[1] - start[1]):
-                    if piece_start.get_piece_SW() == self._whose_turn:
+                    if moving_piece.get_piece_SW() == self._whose_turn:
                         self._direction = [1, -1]  # set the direction of the move
                         return True
 
             # must be direct south movement
             else:
-                if piece_start.get_piece_S() == self._whose_turn:
+                if moving_piece.get_piece_S() == self._whose_turn:
                     self._direction = [1, 0]  # set the direction of the move
                     return True
 
@@ -84,36 +90,88 @@ class GessGame:
                 if abs(end[0] - start[0]) == abs(end[1] - start[1]):
 
                     # is there a stone in the NE position of the piece?
-                    if piece_start.get_piece_NE() == self._whose_turn:
+                    if moving_piece.get_piece_NE() == self._whose_turn:
                         self._direction = [-1, 1]  # set the direction of the move
                         return True
 
             # repeat of the above for a northwest move
             elif end[1] < start[1]:
                 if abs(end[0] - start[0]) == abs(end[1] - start[1]):
-                    if piece_start.get_piece_NW() == self._whose_turn:
+                    if moving_piece.get_piece_NW() == self._whose_turn:
                         self._direction = [-1, -1]  # set the direction of the move
                         return True
 
             # must be direct north movement
             else:
-                if piece_start.get_piece_N() == self._whose_turn:
+                if moving_piece.get_piece_N() == self._whose_turn:
                     self._direction = [-1, 0]  # set the direction of the move
                     return True
 
         # direct east move?
         elif end[0] == start[0] and end[1] > start[1]:
-            if piece_start.get_piece_E() == self._whose_turn:  # stone in the east position?
+            if moving_piece.get_piece_E() == self._whose_turn:  # stone in the east position?
                 self._direction = [0, 1]  # set direction of the move
                 return True
 
         # direct west move?
         elif end[0] == start[0] and end[1] < start[1]:
-            if piece_start.get_piece_W() == self._whose_turn:  # stone in the west position?
+            if moving_piece.get_piece_W() == self._whose_turn:  # stone in the west position?
                 self._direction = [0, -1]  # set direction of the move
                 return True
 
         return False  # not a valid direction of movement
+
+    def valid_distance(self, start, end):
+        """
+        Checks whether the distance of a requested move is valid
+        If distance is valid, the distance attribute is set, and True is returned
+        If the distance is not valid, False is returned
+        """
+        moving_piece = Piece(start, self._board.get_game_board())
+
+        # if there is a stone in the center of the piece, any distance is valid
+        if moving_piece.get_piece_center() == self._whose_turn:
+            if end[0] != start[0]:
+                self._distance = abs(end[0] - start[0])  # set distance based on vertical movement
+
+            elif end[1] != start[1]:
+                self._distance = abs(end[1] - start[1])  # set distance based on horizontal movement
+
+            return True
+
+        # if there is no stone in the center of the piece, the move-distance cannot be greater than 3
+        else:
+            if 3 >= abs(end[0] - start[0]):
+                self._distance = abs(end[0] - start[0])  # set distance based on vertical movement
+                return True
+
+            elif 3 >= abs(end[1] - start[1]):
+                self._distance = abs(end[1] - start[1])  # set distance based on horizontal movement
+                return True
+
+            return False  # the move-distance is greater than 3, but no stone in center of piece
+
+    def board_step(self, start, end):
+        temp_board = self._board
+        moving_piece = Piece(start, self._board.get_game_board())
+        temp_board.remove_piece(start)
+        while self._distance > 1:
+            # add a line for if piece is still on board?.. I think I already have this covered!
+
+            # move the coordinate to the next check position
+            start[0] += self._direction[0]
+            start[1] += self._direction[1]
+            check_piece = Piece(start, temp_board.get_game_board())
+            if not check_piece.is_empty():  # if the "piece" has any stones, then the path of the move is obstructed
+                return False
+
+            self._distance -= 1
+
+        temp_board.add_piece(moving_piece, end)
+
+        # check if still in before this next step...
+        self._board = temp_board
+
 
 class Board:
 
@@ -222,6 +280,18 @@ class Piece:
 
         return True
 
+    def is_empty(self):
+        """
+        Returns True if a piece has no stones
+        Returns False if a piece has a stone
+        """
+        for row in self._piece_matrix:
+            for space in row:
+                if space != ' ':
+                    return False
+
+        return True
+
     def get_piece_center(self):
         return self._center
 
@@ -261,4 +331,6 @@ test.get_board().add_piece(footprint, [13,11])
 display_board()
 
 
-print(test.make_move('b6', 'd8'))
+print(test.make_move('k3', 'k6'))
+display_board()
+
