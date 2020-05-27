@@ -141,36 +141,83 @@ class GessGame:
 
         # if there is no stone in the center of the piece, the move-distance cannot be greater than 3
         else:
-            if 3 >= abs(end[0] - start[0]):
+            if abs(end[0] - start[0]) > 3 or abs(end[1] - start[1] >3):
+                return False  # the move-distance is greater than 3, but no stone in center of piece
+
+            if end[0] != start[0]:
                 self._distance = abs(end[0] - start[0])  # set distance based on vertical movement
-                return True
-
-            elif 3 >= abs(end[1] - start[1]):
+            elif end[1] != start[1]:
                 self._distance = abs(end[1] - start[1])  # set distance based on horizontal movement
-                return True
 
-            return False  # the move-distance is greater than 3, but no stone in center of piece
+            return True
 
     def board_step(self, start, end):
-        temp_board = self._board
         moving_piece = Piece(start, self._board.get_game_board())
-        temp_board.remove_piece(start)
+        moving_coordinate = start[:]
+        self._board.remove_piece(start)
         while self._distance > 1:
             # add a line for if piece is still on board?.. I think I already have this covered!
 
             # move the coordinate to the next check position
-            start[0] += self._direction[0]
-            start[1] += self._direction[1]
-            check_piece = Piece(start, temp_board.get_game_board())
+            moving_coordinate[0] += self._direction[0]
+            moving_coordinate[1] += self._direction[1]
+            check_piece = Piece(moving_coordinate, self._board.get_game_board())
             if not check_piece.is_empty():  # if the "piece" has any stones, then the path of the move is obstructed
+                self._board.add_piece(moving_piece, start)  # return the piece to its starting position
                 return False
 
             self._distance -= 1
 
-        temp_board.add_piece(moving_piece, end)
+        # add the piece back to the board in its final destination, overwriting anything that's already there
+        self._board.add_piece(moving_piece, end)
 
-        # check if still in before this next step...
-        self._board = temp_board
+        if self.still_in(self._board):  # if the mover didn't break their own last ring
+            self._whose_turn, self._up_next = self._up_next, self._whose_turn  # update whose turn it is
+            return True
+
+        else:
+            return False
+
+    def still_in(self, game_board):
+        """
+        Checks if each player is still in the game
+        Returns False if the player who made the move broke their own last ring; returns True otherwise
+        Changes game_state if the player who made the move breaks the other player's last ring
+        """
+        def check_piece(color):
+            """
+            Makes a temporary piece at each valid spot on the board
+            Returns True if the perimeter of the piece is filled with the color of the piece
+            Returns False if no piece has a full perimeter of the specified color
+            """
+            for row in range(3, 18):
+                for column in range(3, 18):
+                    ring_check = Piece([row, column], game_board.get_game_board())
+                    perimeter_count = 0
+                    for stone in ring_check.perimeter():
+                        if stone == color:
+                            perimeter_count += 1
+                    if perimeter_count == 8 and ring_check.get_piece_center() == ' ':
+                        print(row, column)
+                        print(ring_check.get_piece_center())
+                        return True
+
+                return False
+
+        if check_piece(self._whose_turn):  # if the move didn't break the mover's own last ring
+            print('here')
+            if not check_piece(self._up_next):  # if the move broke the opponent's last ring
+
+                # change game_state accordingly
+                if self._whose_turn == "B":
+                    self._game_state = "BLACK_WON"
+                else:
+                    self._game_state = "WHITE_WON"
+
+            return True
+
+        else:
+            return False
 
 
 class Board:
@@ -325,12 +372,13 @@ def display_board():
         print(row)
     print()
 
+
 test = GessGame()
-footprint = Piece([3,3], test.get_board().get_game_board())
-test.get_board().add_piece(footprint, [13,11])
+print(test.make_move('i3', 'i6'))
 display_board()
+print(test._game_state)
 
+#thing = Piece([3,12], test.get_board().get_game_board())
+#print(thing.get_piece_center())
 
-print(test.make_move('k3', 'k6'))
-display_board()
 
