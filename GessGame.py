@@ -184,25 +184,13 @@ class GessGame:
         Returns False if the player who made the move broke their own last ring; returns True otherwise
         Changes game_state if the player who made the move breaks the other player's last ring
         """
-        def check_piece(color):
-            """
-            Makes a temporary piece at each valid spot on the board
-            Returns True if the perimeter of the piece is filled with the color of the piece
-            Returns False if no piece has a full perimeter of the specified color
-            """
-            for row in range(3, 18):
-                for column in range(3, 18):
-                    ring_check = Piece([row, column], game_board.get_game_board())
-                    perimeter_count = 0
-                    for stone in ring_check.perimeter():
-                        if stone == color:
-                            perimeter_count += 1
-                    if perimeter_count == 8 and ring_check.get_piece_center() == ' ':
-                        print(row, column)
-                        print(ring_check.get_piece_center())
-                        return True
-
-                return False
+        for row in range(3, 18):
+            for column in range(3, 18):
+                ring_check = Piece([row, column], game_board.get_game_board())
+                if ring_check.is_ring():
+                    return True
+                else:
+                    return False
 
         if check_piece(self._whose_turn):  # if the move didn't break the mover's own last ring
             print('here')
@@ -219,6 +207,50 @@ class GessGame:
         else:
             return False
 
+'''
+    def still_in(self, game_board):
+        """
+        Checks if each player is still in the game
+        Returns False if the player who made the move broke their own last ring; returns True otherwise
+        Changes game_state if the player who made the move breaks the other player's last ring
+        """
+        def check_piece(color):
+            """
+            Makes a temporary piece at each valid spot on the board
+            Returns True if the perimeter of the piece is filled with the color of the piece
+            Returns False if no piece has a full perimeter of the specified color
+            """
+            for row in range(3, 18):
+                for column in range(3, 18):
+                    ring_check = Piece([row, column], game_board.get_game_board())
+                    if ring_check.is_ring():
+                        return True
+#                    perimeter_count = 0
+ #                   for stone in ring_check.perimeter():
+  #                      if stone == color:
+   #                         perimeter_count += 1
+    #                if perimeter_count == 8 and ring_check.get_piece_center() == ' ':
+     #                   print(row, column)
+      #                  print(ring_check.get_piece_center())
+       #                 return True
+                    else:
+                        return False
+
+        if check_piece(self._whose_turn):  # if the move didn't break the mover's own last ring
+            print('here')
+            if not check_piece(self._up_next):  # if the move broke the opponent's last ring
+
+                # change game_state accordingly
+                if self._whose_turn == "B":
+                    self._game_state = "BLACK_WON"
+                else:
+                    self._game_state = "WHITE_WON"
+
+            return True
+
+        else:
+            return False
+'''
 
 class Board:
 
@@ -339,6 +371,12 @@ class Piece:
 
         return True
 
+    def is_ring(self):
+        if " " not in self.perimeter() and self._center == " ":
+            return True
+        else:
+            return False
+
     def get_piece_center(self):
         return self._center
 
@@ -378,7 +416,5 @@ print(test.make_move('i3', 'i6'))
 display_board()
 print(test._game_state)
 
-#thing = Piece([3,12], test.get_board().get_game_board())
-#print(thing.get_piece_center())
-
-
+thing = Piece([3,12], test.get_board().get_game_board())
+print(thing.is_ring())
