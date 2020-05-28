@@ -1,3 +1,11 @@
+# Author: Phoenix Harris
+# Date: 5.27.2020
+# Description: This code is an implementation of the Gess board game - a Chess/Go variant. The GessGame, Board, and
+#              Piece classes manage the state of the game together. Two players take turns making moves until one player
+#              destroys the ring of the opponent or someone concedes defeat. Each player starts with one ring, but can
+#              form more if desired. Valid distance and direction of a move are determined by the orientation of the
+#              footprint of a piece.
+
 class GessGame:
     """
     The GessGame class is used to make and play a game of Gess - a Chess/Go variant board game.
