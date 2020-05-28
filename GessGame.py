@@ -208,8 +208,6 @@ class GessGame:
                 for column in range(3, 19):  # for every square on the board where rings are possible
                     ring_check = Piece([row, column], game_board.get_game_board())  # make a piece
                     if ring_check.is_ring(color):  # check if the piece is a ring
-                        print(row, column)
-                        print(ring_check.get_piece_SE())
                         return True
             return False
 
@@ -244,8 +242,6 @@ class GessGame:
                 for column in range(3, 19):  # for every square on the board where rings are possible
                     ring_check = Piece([row, column], game_board.get_game_board())  # make a piece
                     if ring_check.is_ring(color):  # check if the piece is a ring
-                        print(row, column)
-                        print(ring_check.get_piece_SE())
                         return True
             return False
 
