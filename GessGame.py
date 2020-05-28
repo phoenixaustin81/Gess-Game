@@ -8,6 +8,15 @@ class GessGame:
         self._direction = None
         self._distance = None
 
+    def get_game_state(self):
+        return self._game_state
+
+    def resign_game(self):
+        if self._whose_turn == "B":
+            self._game_state = "WHITE_WON"
+        else:
+            self._game_state = "BLACK_WON"
+
     def get_board(self):
         return self._board
 
@@ -152,15 +161,17 @@ class GessGame:
             return True
 
     def board_step(self, start, end):
+        # make a copy of the piece to be moved and remove it from the board
         moving_piece = Piece(start, self._board.get_game_board())
-        moving_coordinate = start[:]
         self._board.remove_piece(start)
-        while self._distance > 1:
-            # add a line for if piece is still on board?.. I think I already have this covered!
 
-            # move the coordinate to the next check position
+        # go in the direction of the move, one step at a time, checking for obstructions at each step
+        moving_coordinate = start[:]
+        while self._distance > 1:
+            # move the coordinate to the next check-position
             moving_coordinate[0] += self._direction[0]
             moving_coordinate[1] += self._direction[1]
+
             check_piece = Piece(moving_coordinate, self._board.get_game_board())
             if not check_piece.is_empty():  # if the "piece" has any stones, then the path of the move is obstructed
                 self._board.add_piece(moving_piece, start)  # return the piece to its starting position
@@ -168,14 +179,16 @@ class GessGame:
 
             self._distance -= 1
 
-        # add the piece back to the board in its final destination, overwriting anything that's already there
-        self._board.add_piece(moving_piece, end)
-
         if self.still_in(self._board):  # if the mover didn't break their own last ring
+            self._board.add_piece(moving_piece, end)  # add the piece, overwriting the contents of the board
             self._whose_turn, self._up_next = self._up_next, self._whose_turn  # update whose turn it is
+            self.still_in_double_check(self._board)  # to update game_state
             return True
 
         else:
+            # return the board to its previous state
+            self._board.add_piece(moving_piece, start)
+
             return False
 
     def still_in(self, game_board):
@@ -183,6 +196,7 @@ class GessGame:
         Checks if each player is still in the game
         Returns False if the player who made the move broke their own last ring; returns True otherwise
         Changes game_state if the player who made the move breaks the other player's last ring
+        This version of the function is called before a move is finalized (piece not yet placed in final destination)
         """
         def check_piece(color):
             """
@@ -194,6 +208,8 @@ class GessGame:
                 for column in range(3, 19):  # for every square on the board where rings are possible
                     ring_check = Piece([row, column], game_board.get_game_board())  # make a piece
                     if ring_check.is_ring(color):  # check if the piece is a ring
+                        print(row, column)
+                        print(ring_check.get_piece_SE())
                         return True
             return False
 
@@ -208,8 +224,44 @@ class GessGame:
             return True
 
         else:
+
             return False
 
+    def still_in_double_check(self, game_board):
+        """
+        Checks if each player is still in the game
+        Returns True if the perimeter of the piece is filled with the color of the piece
+        Changes game_state if the player who made the move breaks the other player's last ring
+        This version of the function is called after a move is finalized (piece placed in final destination)
+        """
+        def check_piece(color):
+            """
+            Makes a temporary piece at each valid spot on the board
+            Returns True if the perimeter of the piece is filled with the color of the piece
+            Returns False if no piece has a full perimeter of the specified color
+            """
+            for row in range(3, 19):
+                for column in range(3, 19):  # for every square on the board where rings are possible
+                    ring_check = Piece([row, column], game_board.get_game_board())  # make a piece
+                    if ring_check.is_ring(color):  # check if the piece is a ring
+                        print(row, column)
+                        print(ring_check.get_piece_SE())
+                        return True
+            return False
+
+        if check_piece(self._up_next):  # if the move didn't break the mover's own last ring
+            if not check_piece(self._whose_turn):  # if the move broke the opponent's last ring
+                # change game_state accordingly
+                if self._whose_turn == "W":
+                    self._game_state = "BLACK_WON"
+                else:
+                    self._game_state = "WHITE_WON"
+
+            return True
+
+        else:
+
+            return False
 
 class Board:
 
@@ -238,6 +290,9 @@ class Board:
 
     def get_game_board(self):
         return self._board
+
+    def import_board(self, a_board):
+        self._board = a_board
 
     def remove_piece(self, center_coordinates):
 
@@ -367,6 +422,3 @@ class Piece:
 
     def get_piece_E(self):
         return self._E
-
-
-
